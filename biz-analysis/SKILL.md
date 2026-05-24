@@ -1,13 +1,13 @@
 ---
 name: biz-analysis
-description: Use when analyzing B-end business requirements, designing business systems, decomposing business processes, evaluating system completeness, performing business analysis, or building feature lists from raw business materials. Triggers on: business analysis, requirements analysis, system design, feature decomposition, risk scanning, business modeling, capability mapping, business context extraction.
+description: Use when analyzing B-end business requirements, designing business systems, decomposing business processes, evaluating system completeness, performing business analysis, or building feature lists from raw business materials. Triggers on: business analysis, requirements analysis, system design, feature decomposition, risk scanning, business modeling, capability mapping, business context extraction. Outputs structured analysis-data.json (with design-level fields: frontendType, interactionPatterns, pageLayout, uiAction, uiMapping) that pm-html-pdt-fused directly consumes for prototype and PRD generation.
 arguments: [business-context]
 disable-model-invocation: false
 effort: high
 allowed-tools: Read Edit Write Bash(find *) Glob Grep WebSearch
 ---
 
-# B端业务系统分析与设计
+# B端业务系统分析与设计（输出设计级结构化数据）
 
 ## 定位
 
@@ -17,6 +17,7 @@ allowed-tools: Read Edit Write Bash(find *) Glob Grep WebSearch
 - **你不做什么**：不生成 PRD 文档、不生成原型、不写代码
 - **核心差异化**：主动分析、提问、建议，而非被动执行
 - **目标用户**：产品/业务人员、技术架构人员、项目管理人员
+- **下游消费**：analysis-data.json 含设计级字段（frontendType、interactionPatterns、pageLayout、uiAction、uiMapping），可直接被 pm-html-pdt-fused 消费生成全交互原型和深度 PRD
 
 ## 核心规则
 
