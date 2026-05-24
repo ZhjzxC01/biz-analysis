@@ -76,9 +76,14 @@ try {
 }
 
 const errors = [];
+const warnings = [];
 
 function addError(path, message) {
   errors.push(`[${path}]: ${message}`);
+}
+
+function addWarning(path, message) {
+  warnings.push(`[${path}]: ${message}`);
 }
 
 function checkType(value, expectedType, path) {
@@ -195,6 +200,31 @@ if (checkType(data.business_model, 'object', 'business_model')) {
         }
       }
     });
+    // entity.attributes 校验（新增设计级字段）
+    data.business_model.entities.forEach((entity, i) => {
+      if (entity.attributes && Array.isArray(entity.attributes)) {
+        entity.attributes.forEach((attr, ai) => {
+          if (!attr.name) {
+            addError(`business_model.entities[${i}].attributes[${ai}].name`, '缺失');
+          }
+          if (!attr.type) {
+            addError(`business_model.entities[${i}].attributes[${ai}].type`, '缺失');
+          }
+          const validFrontendTypes = ['text', 'number', 'money', 'date', 'datetime', 'select', 'multi_select', 'textarea', 'file', 'user', 'department', 'status'];
+          if (attr.frontendType && !validFrontendTypes.includes(attr.frontendType)) {
+            addError(`business_model.entities[${i}].attributes[${ai}].frontendType`, `非法值: ${attr.frontendType}，合法值: ${validFrontendTypes.join(', ')}`);
+          }
+          if (attr.validation) {
+            if (typeof attr.validation.required !== 'boolean') {
+              addWarning(`business_model.entities[${i}].attributes[${ai}].validation.required`, '应为 boolean');
+            }
+            if (attr.validation.enum && !Array.isArray(attr.validation.enum)) {
+              addError(`business_model.entities[${i}].attributes[${ai}].validation.enum`, '应为数组');
+            }
+          }
+        });
+      }
+    });
   }
   
   // 3.2 实体关系验证
@@ -253,6 +283,17 @@ if (checkType(data.business_model, 'object', 'business_model')) {
               }
               checkType(t.trigger, 'string', `${tp}.trigger`);
               checkType(t.conditions, 'string', `${tp}.conditions`);
+
+              // transitions.uiAction 校验
+              if (t.uiAction) {
+                if (!t.uiAction.buttonLabel) {
+                  addWarning(`${tp}.uiAction.buttonLabel`, '缺失');
+                }
+                const validButtonTypes = ['primary', 'secondary', 'danger', 'ghost'];
+                if (t.uiAction.buttonType && !validButtonTypes.includes(t.uiAction.buttonType)) {
+                  addError(`${tp}.uiAction.buttonType`, `非法值: ${t.uiAction.buttonType}`);
+                }
+              }
             }
           });
         }
@@ -281,6 +322,16 @@ if (checkType(data.business_model, 'object', 'business_model')) {
               }
             }
           });
+        }
+
+        // processes.uiMapping 校验
+        if (proc.uiMapping) {
+          if (!proc.uiMapping.pageId) {
+            addWarning(`${p}.uiMapping.pageId`, '缺失');
+          }
+          if (!proc.uiMapping.stepToModule || !Array.isArray(proc.uiMapping.stepToModule)) {
+            addWarning(`${p}.uiMapping.stepToModule`, '应为数组');
+          }
         }
       }
     });
@@ -328,6 +379,24 @@ if (checkType(data.features, 'array', 'features')) {
       
       if (checkType(f.acceptance_criteria, 'array', `${p}.acceptance_criteria`)) {
         f.acceptance_criteria.forEach((ac, j) => checkType(ac, 'string', `${p}.acceptance_criteria[${j}]`));
+      }
+
+      // features.interactionPatterns 校验
+      if (f.interactionPatterns) {
+        if (!Array.isArray(f.interactionPatterns)) {
+          addError(`${p}.interactionPatterns`, '应为数组');
+        }
+      }
+
+      // features.pageLayout 校验
+      if (f.pageLayout) {
+        const validPageTypes = ['list', 'detail', 'create', 'edit', 'approval', 'config', 'dashboard', 'log'];
+        if (!validPageTypes.includes(f.pageLayout.pageType)) {
+          addError(`${p}.pageLayout.pageType`, `非法值: ${f.pageLayout.pageType}`);
+        }
+        if (!f.pageLayout.modules || !Array.isArray(f.pageLayout.modules) || f.pageLayout.modules.length === 0) {
+          addError(`${p}.pageLayout.modules`, '应为非空数组');
+        }
       }
     }
   });
@@ -495,6 +564,11 @@ if (checkType(data.system_design, 'object', 'system_design')) {
 }
 
 // 报告校验结果
+if (warnings.length > 0) {
+  console.warn(`\x1b[33m⚠️ 发现 ${warnings.length} 个警告：\x1b[0m`);
+  warnings.forEach(w => console.warn(`  \x1b[33m- ${w}\x1b[0m`));
+}
+
 if (errors.length > 0) {
   console.error(`\x1b[31m❌ 校验失败！发现 ${errors.length} 个不符合规范的项：\x1b[0m`);
   errors.forEach(err => console.error(`  \x1b[33m- ${err}\x1b[0m`));

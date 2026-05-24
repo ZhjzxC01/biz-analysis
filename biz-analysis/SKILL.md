@@ -407,6 +407,42 @@ API 清单：X 个接口
 
 **HARD-GATE**: 用户审阅最终报告。确认前不得标记分析完成。
 
+### 设计级字段生成要求（Phase 6 新增）
+
+生成 analysis-data.json 时，以下字段**必须填写**，不能省略：
+
+1. **entity.attributes**：每个核心实体必须有完整的属性列表（不能只有 key_attributes），每个属性包含：
+   - `name`、`type`（业务数据类型）、`description`、`confidence`
+   - `frontendType`：根据业务类型推断前端控件类型
+   - `validation`：根据业务规则推断校验规则（required、min/max、enum 等）
+
+   **frontendType 推断规则**：
+   - 金额类（amount, price, cost, fee, money）→ `money`
+   - 数量类（count, quantity, number, num）→ `number`
+   - 日期（date）→ `date`，日期时间（datetime, timestamp）→ `datetime`
+   - 状态/枚举（status, type, category, level, priority）→ `select`
+   - 多选标签（tags, labels）→ `multi_select`
+   - 长文本（description, remark, reason, comment, note）→ `textarea`
+   - 文件（file, attachment, image）→ `file`
+   - 人员（user, operator, creator, approver）→ `user`
+   - 部门（department, org, team）→ `department`
+   - 其他 → `text`
+
+2. **features.interactionPatterns**：根据页面类型和功能特征推断交互模式
+   - 列表页（list）→ 至少 `["advanced-filter", "hover-actions", "empty-state"]`
+   - 详情页（detail）→ 至少 `["breadcrumb", "confirm-dialog"]`
+   - 新建/编辑页（create/edit）→ 至少 `["conditional-display", "cross-field-validation", "toast-feedback"]`
+   - 审批页（approval）→ 至少 `["confirm-dialog", "toast-feedback"]`
+   - 有搜索框时 → 加 `"search-debounce"`
+   - 有级联关系时 → 加 `"cascade-select"`
+   - 有行内编辑时 → 加 `"inline-edit"`
+
+3. **features.pageLayout**：根据功能描述推断页面模块组成，每个 feature 至少描述 pageType 和 2-3 个核心模块。
+
+4. **state_machines.transitions.uiAction**：每个状态转换必须定义对应的界面操作，包括按钮文案、类型、前置条件和确认弹窗。
+
+5. **processes.uiMapping**：每个主流程必须映射到对应的页面和模块。
+
 ---
 
 ### Phase 7: 增量修正（可选，用户发起）

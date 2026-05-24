@@ -42,7 +42,24 @@
         "name": "string",
         "description": "string",
         "key_attributes": ["string"],
-        "confidence": "high|medium|low"
+        "confidence": "high|medium|low",
+        "attributes": [
+          {
+            "name": "string",
+            "type": "string (业务类型: int, decimal, varchar, date, enum, boolean, text)",
+            "description": "string",
+            "confidence": "high|medium|low",
+            "frontendType": "text|number|money|date|datetime|select|multi_select|textarea|file|user|department|status (可选，pm 消费的前端字段类型)",
+            "validation": {
+              "required": "boolean",
+              "min": "number|null (数值最小值或字符串最小长度)",
+              "max": "number|null (数值最大值或字符串最大长度)",
+              "pattern": "string|null (正则校验模式)",
+              "enum": "string[]|null (可选值列表，用于 select 类型)",
+              "rules": "string[] (业务校验规则描述)"
+            }
+          }
+        ]
       }
     ],
     "relationships": [
@@ -62,7 +79,13 @@
             "from": "string",
             "to": "string",
             "trigger": "string",
-            "conditions": "string"
+            "conditions": "string",
+            "uiAction": {
+              "buttonLabel": "string (按钮文案)",
+              "buttonType": "primary|secondary|danger|ghost",
+              "precondition": "string (按钮可用的前置条件描述)",
+              "confirmMessage": "string|null (确认弹窗文案，null 表示无需确认)"
+            }
           }
         ]
       }
@@ -72,7 +95,18 @@
         "name": "string",
         "type": "main|branch|exception|approval",
         "steps": ["string"],
-        "actors": ["string"]
+        "actors": ["string"],
+        "uiMapping": {
+          "pageId": "string (该流程对应的页面 ID)",
+          "stepToModule": [
+            {
+              "step": "string (流程步骤描述)",
+              "moduleId": "string (对应模块 ID)",
+              "fieldId": "string|null (对应字段 ID)",
+              "actionId": "string|null (对应操作 ID)"
+            }
+          ]
+        }
       }
     ],
     "roles": [
@@ -91,7 +125,19 @@
       "priority": "P0|P1|P2",
       "user_story": "string",
       "acceptance_criteria": ["string (Gherkin BDD 格式: Given-When-Then)"],
-      "dependencies": ["string"]
+      "dependencies": ["string"],
+      "interactionPatterns": ["string (引用 b2b-interaction-patterns.md 中的模式 ID，可选)"],
+      "pageLayout": {
+        "pageType": "list|detail|create|edit|approval|config|dashboard|log",
+        "modules": [
+          {
+            "type": "filter|table|form|tabs|wizard|actions|summary|chart|empty_state",
+            "purpose": "string (模块用途描述)",
+            "steps": "string[] (仅 wizard 类型需要)",
+            "buttons": "string[] (仅 actions 类型需要)"
+          }
+        ]
+      }
     }
   ],
   "feature_tree": {
@@ -272,6 +318,10 @@ Phase 6 生成 `analysis-data.json` 后，**必须运行自动化校验脚本进
 | feature_tree.modules | 作为功能结构 |
 | system_design.data_model | 参考数据库设计 |
 | risks | 写入 PRD 风险章节 |
+| entity.attributes (含 frontendType/validation) | 生成 prototypeSpec 字段定义和校验规则 |
+| features.interactionPatterns | 生成 prototypeSpec 模块交互声明 |
+| features.pageLayout | 生成 prototypeSpec 页面模块结构 |
+| state_machines.transitions.uiAction | 生成 flowSpec 转换操作和页面按钮 |
 
 ### 扩展下游
 
